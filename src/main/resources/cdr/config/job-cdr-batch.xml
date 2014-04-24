@@ -1,0 +1,74 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:batch="http://www.springframework.org/schema/batch" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/batch
+		http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+">
+
+	<import resource="classpath:cdr/config/context.xml" />
+	<import resource="classpath:cdr/config/database.xml" />
+
+	<batch:job id="cdrProcessingJob">
+		<batch:step id="step1">
+			<batch:tasklet>
+				<batch:chunk reader="cvsFileItemReader" writer="xmlItemWriter" 
+					commit-interval="100">
+				</batch:chunk>
+			</batch:tasklet>
+		</batch:step>
+	</batch:job>
+	
+ 	<bean id="customDelimitedLineTokenizer" class="com.timwe.batch.cdr.CustomDelimitedLineTokenizer">
+<!-- 	<bean id="customDelimitedLineTokenizer" class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer"> -->
+		<property name="names" value="var0,var1,var2,var3,var4,var5,var6,var7,var8,var9,var10,var11,var12,var13,var14,var15,var16,var17,var18,var19,var20,var21,var22,var23,var24,var25,var26,var27,var28,var29,var30,var31,var32,var33,var34,var35,var36,var37,var38,var39,var40,var41,var42,var43" />
+		<property name="delimiter" value="|" />	
+			
+	</bean>
+
+	<bean id="cvsFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+		<property name="resource" value="classpath:/cdr/input/testcdr.txt" />
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">				
+				<property name="lineTokenizer" ref="customDelimitedLineTokenizer" />
+				<property name="fieldSetMapper">
+					<bean class="com.timwe.batch.cdr.CdrItemFieldSetMapper" />
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+	<bean id="report" class="com.timwe.batch.cdr.CdrItem" scope="prototype" />
+	<bean id="xmlItemWriter" class="org.springframework.batch.item.xml.StaxEventItemWriter">
+		<property name="resource" value="file:src/main/resources/cdr/output/report.xml" />
+		<property name="marshaller" ref="cdrReportMarshaller" />
+		<property name="rootTagName" value="report" />
+	</bean>
+
+	<bean id="cdrReportMarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+		<property name="classesToBeBound">
+			<list>
+				<value>com.timwe.batch.cdr.CdrItem</value>
+			</list>
+		</property>
+	</bean>
+
+ 	<!-- Enable oracleItemWriter
+	<bean id="oracleItemWriter"
+		class="org.springframework.batch.item.database.JdbcBatchItemWriter">
+		<property name="dataSource" ref="oracleDataSource" />
+		<property name="sql">
+			<value>
+            <![CDATA[        
+            	insert into [YOUR_DB_TABLE].CDR_RESULT 
+				values (:var0,:var1,:var2,:var3,:var4,:var5,:var6,:var7,:var8,:var9,:var10,:var11,:var12,:var13,:var14,:var15,:var16,:var17,:var18,:var19,:var20,:var21,:var22,:var23,:var24,:var25,:var26,:var27,:var28,:var29,:var30,:var31,:var32,:var33,:var34,:var35,:var36,:var37,:var38,:var39,:var40,:var41,:var42,:var43)
+            ]]>
+			</value>
+		</property>
+		
+		<property name="itemSqlParameterSourceProvider">
+			<bean class="org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider" />
+		</property>
+	</bean>
+	 -->
+</beans>

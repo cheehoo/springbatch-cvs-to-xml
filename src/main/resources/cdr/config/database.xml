@@ -1,0 +1,35 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/jdbc 
+		http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd">
+
+	<bean id="hsqlDataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="org.hsqldb.jdbcDriver" />
+		<property name="url" value="jdbc:hsqldb:mem:testdb;sql.enforce_strict_size=true" />
+		<property name="username" value="sa" />
+		<property name="password" value="" />
+	</bean>
+	
+	<!-- create job-meta tables automatically -->
+	<jdbc:initialize-database data-source="hsqlDataSource">
+		<jdbc:script location="classpath:/org/springframework/batch/core/schema-hsqldb.sql" />
+	</jdbc:initialize-database>	
+	
+	<!--  Enable oracle datasource
+	<bean id="oracleDataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="[YOUR_DB_DRIVECLASSNAME]" />
+		<property name="url" value="[YOUR_DB_URL]" />
+		<property name="username" value="[YOUR_DB_USERNAME]" />
+		<property name="password" value="[YOUR_DB_PASSWORD]" />
+	</bean>
+	-->
+	
+	<bean id="transactionManager"
+		class="org.springframework.batch.support.transaction.ResourcelessTransactionManager" />
+	
+</beans>
